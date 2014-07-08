@@ -7,11 +7,13 @@ var payload = []; // The payload we're going to send
  
 var dgram = require('dgram'); // UDP support
  
-var server = dgram.createSocket('udp4'); // For receiving data
-server.bind(PORT); // Listen on port 10000
  
 var client = dgram.createSocket('udp4'); // For sending data
- 
+client.bind(10000);
+client.setBroadcast(true);
+var server = dgram.createSocket('udp4'); // For receiving data
+server.bind(PORT); // Listen on port 10000
+
 var localIP = getBroadcastAddress();
 var broadcastip = localIP.substr(0,localIP.lastIndexOf('.')) + ".255";
  
