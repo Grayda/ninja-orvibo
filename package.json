@@ -1,0 +1,31 @@
+{
+  "name": "ninja-orvibo",
+  "version": "0.0.1",
+  "description": "A driver for the Orvibo range of Wi-Fi smart power sockets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/Grayda/ninja-orvibo"
+  },
+  "keywords": [
+    "orvibo",
+    "wifi",
+    "smart",
+    "socket",
+    "aldi",
+    "bauhn"
+  ],
+  "author": "David \"Grayda\" Gray",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Grayda/ninja-orvibo/issues"
+  },
+  "config": {
+    "hasSentAnnouncement": false,
+	"mac_address": ["0xac","0xcf","0x23","0x24","0x09","0x56"]
+  }
+
+}
