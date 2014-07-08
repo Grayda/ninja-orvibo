@@ -3,7 +3,7 @@ ninja-orvibo
 
 A driver for the Ninja Blocks that controls Orvibo Wi-Fi Smart Sockets
 
-Please note: This code is so Alpha, not even hipsters would touch it. I strongly encourage people to submit fixes and fork the project.
+Please note: This code is so Beta, not even hipsters would touch it. I strongly encourage people to submit fixes and fork the project.
 
 At this time, you can only control one socket, but you can control it via the dashboard or the rules page. 
 
@@ -14,6 +14,11 @@ To install this driver, SSH into your block, go to the location of your Ninja Bl
 
 `git clone http://github.com/Grayda/ninja-orvibo && cd ninja-orvibo && npm install && restartninja`
 
+Feedback
+========
+
+This is a beta driver. It has been built and tested against the smart socket by Bauhn (which is the Orvibo S10 smart socket, I believe). I'm looking for people who have different types of Orvibo Wi-Fi smart sockets to test this and report back. Packet captures (via TCPdump or Wireshark) definitely most welcome
+
 To-Do:
 ======
 
@@ -22,7 +27,8 @@ To-Do:
 * Fix up the options so you can modify the settings instead of it recreating them each time
 * Maybe: Make this a truly automatic setup. Set it up in the SP app, then the Ninja driver will detect the MAC address and stuff
 * Rewrite parts (most?) of this code so you can control more than one socket. Pull requests DEFINITELY welcome on this part!
-* 
+* Add the ability to read the state of the device without turning it on or off
+* Modify sockettest.js to provide more details about the socket and where stuff is failing
 
 Thanks to:
 ==========
