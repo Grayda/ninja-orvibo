@@ -83,18 +83,6 @@ myDriver.prototype.config = function(rpc,cb) {
   else if (typeof configHandlers[rpc.method] === "function") {
     return configHandlers[rpc.method].call(this,rpc.params,cb);
   }
-  else if (rpc.method == "save_mac") {
-	  	macAddr = strToHex(params.mac_address);
-
-    try {
-		this._opts.mac_address = macAddr;
-	    self.save();		
-	} catch(ex) {
-		fs.appendFileSync("/home/pi/log.txt", ex + "\n");
-		fs.appendFileSync("/home/pi/log.txt", "this.opts was: " + this._opts.toString());
-	}
-
-  }
   else {
     return cb(true);
   }
