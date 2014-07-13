@@ -1,6 +1,6 @@
 {
   "name": "ninja-orvibo",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A driver for the Orvibo range of Wi-Fi smart power sockets",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,7 @@
   },
   "config": {
     "hasSentAnnouncement": false,
-	"mac_address": ["0xac","0xcf","0x23","0x24","0x09","0x56"]
+	"mac_address": ""
   }
 
 }
