@@ -3,7 +3,7 @@ ninja-orvibo
 
 A driver for the Ninja Blocks that controls Orvibo Wi-Fi Smart Sockets
 
-Please note: This code mostly works, but saving options is not yet implemented. You'll need to add your MAC address manually to ../../config/ninja-orvibo/config.json for it to work. Fix coming soon!
+Please note: This code is so Beta, not even hipsters would touch it. I strongly encourage people to submit fixes and fork the project.
 
 At this time, you can only control one socket, but you can control it via the dashboard or the rules page. 
 

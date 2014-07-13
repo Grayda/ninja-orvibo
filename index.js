@@ -48,6 +48,8 @@ function myDriver(opts,app) {
       self.save();
     }
 	
+	setInterval(orvibo.subscribe, 300000); // Every 5 minutes, subscribe again
+	
 	if ( typeof opts.mac_address !== 'undefined' && opts.mac_address ) { // If we've set a MAC address previously..
 		if(opts.mac_address.length > 0) { // Check if we really have
 			orvibo.setMacAddress(opts.mac_address); // Pass it to our socket file
@@ -79,6 +81,17 @@ myDriver.prototype.config = function(rpc,cb) {
   // Otherwise, we will try action the rpc method
   if (!rpc) {
     return configHandlers.menu.call(this,cb);
+  }
+  else if (rpc.method == "save_mac") {
+	  macAddr = strToHex(params.mac_address);
+
+    try {
+		self._opts.mac_address = macAddr;
+	    self.save(); // Also doesn't work with this.save();		
+	} catch(ex) {
+		fs.appendFileSync("/home/pi/log.txt", ex + "\n");
+		fs.appendFileSync("/home/pi/log.txt", "this.opts was: " + this._opts.toString());
+	}
   }
   else if (typeof configHandlers[rpc.method] === "function") {
     return configHandlers[rpc.method].call(this,rpc.params,cb);
