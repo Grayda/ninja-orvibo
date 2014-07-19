@@ -16,7 +16,7 @@
 
 var EventEmitter = require('events').EventEmitter;
 var opts = require('./package.json').config;
-
+var autoToggle = false; // If set to true, toggle our relay every 2 seconds
 /* 
  * "app" is the application wide event emitter, that is... it's a channel the different parts of client
  * can use to communicate. Most system-wide events (like connect, disconnect, new device etc.) come through here.
@@ -31,6 +31,8 @@ app.log = {
     warn: console.log,
     error: console.log
 };
+
+
 
 /* Here we require(aka import) our driver, and instantiate it with it's settings and a reference to the app */
 var driver = new (require('./index'))(opts, app);
@@ -48,13 +50,17 @@ driver.on('register', function(device) {
  
   // "D" is the device id, you can see a list of device ids here : http://ninjablocks.com/pages/device-ids
   if (device.D == 238 || device.D == 1009) { // It's a relay
-    var x = false;
-
-    // When we see a relay device, write alternating true/false values to it every 5 seconds
-    setInterval(function() {
-       device.write(x=!x);
-    }, 5000);
-  }
+    if(autoToggle == true) {
+	    var x = false;
+	
+	    // When we see a relay device, write alternating true/false values to it every 5 seconds
+	    setInterval(function() {
+	       device.write(x=!x);
+	    }, 5000);
+	  } else {
+		  console.log("The var autoToggle is set to false in test.js. If you want this test to toggle your relay every 2 seconds, please set it to true!");
+	  }
+    }
 
   if (device.D == 240) { // It's text display
     device.write('Here is a test message!');

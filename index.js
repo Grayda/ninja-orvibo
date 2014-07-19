@@ -71,7 +71,7 @@ function myDriver(opts,app) {
 	}); // We've subscribed to our device. Now we need to grab its name!
 	
 	orvibo.on('messagereceived', function(message) {
-		console.log("MSG: " + message.toString('hex'));
+		// console.log("MSG: " + message.toString('hex'));
 	});
 	
 	orvibo.on('queried', function(index, name) {
@@ -82,7 +82,7 @@ function myDriver(opts,app) {
 	    self.emit('register', new Device(index, name, orvibo.hosts[index].macaddress, orvibo.getState(index)));
 
 	});
-
+	
 	console.log("Preparing driver ..");
 	orvibo.prepare(); // Get ready to start finding sockets
   });
@@ -148,6 +148,12 @@ function Device(index, dName, macaddress, state) {
   process.nextTick(function() {
     this.emit('data', state);
   }.bind(this));
+  
+  	orvibo.on('statechanged', function(index, state) {
+		console.log("State changed" + state);
+		self.emit('data', state);
+	});
+
 };
 
 /**
@@ -160,8 +166,10 @@ Device.prototype.write = function(data) {
 	try {
 		if(orvibo.hosts[index].subscribed == true) {
 			orvibo.setState(index, data);
+			console.log("Data received: " + data + " ..");			
 			this.emit('data', data);
 		} else {
+			console.log("Not subscribed. Discovering ..");
 			orvibo.discover();
 		}
 	} catch(ex) {
