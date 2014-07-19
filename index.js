@@ -1,21 +1,21 @@
-var util = require('util') // Used to get emit() to work
+var util = require('util')
   , stream = require('stream')
-  , configHandlers = require('./lib/config-handlers') // The code that handles the setup of our socket (e.g. save_mac etc.)
-  , OrviboSocket = require("./lib/socket.js"); // The meat of our driver -- the driver that runs the socket!
+  , configHandlers = require('./lib/config-handlers')
+  , OrviboSocket = require("./lib/socket.js");
 
 // Give our driver a stream interface
 util.inherits(myDriver,stream);
 
-// Displayed when the driver is first installed.
+// Our greeting to the user.
 var HELLO_WORLD_ANNOUNCEMENT = {
   "contents": [
-    { "type": "heading",      "text": "Orvibo Driver Loaded" },
-    { "type": "paragraph",    "text": "The Orvibo Wi-Fi smart socket driver has been loaded. This driver needs to be configured before it can be used!" }
+    { "type": "heading",      "text": "Orvibo Socket Driver Loaded" },
+    { "type": "paragraph",    "text": "The Orvibo Socket driver has been loaded and is now scanning for sockets.." }
   ]
 };
 
-var orvibo = new OrviboSocket(); // A new instance of our socket library
-var dTimer; // This var is used to retry our discovery packet if no sockets were discovered first time round (it can happen due to some funny business with node, dgrams and my sendMessage code
+var orvibo = new OrviboSocket(); // The main class that controls our sockets
+var dTimer; // A timer that repeats orvibo.discovery() until something is found. 
 
 /**
  * Called when our client starts up
@@ -33,12 +33,9 @@ var dTimer; // This var is used to retry our discovery packet if no sockets were
  */
 function myDriver(opts,app) {
 
-  var self = this;
-  this._opts = opts;
+  var self = this; // When we dive into functions like .on() and others, the meaning of 'this' changes, so we set self = this so when we say self, we know what we mean
 
-  app.on('client::up',function(){
-	orvibo.prepare();
-    // The client is now connected to the Ninja Platform
+  app.on('client::up',function(){ // The client is now connected to the Ninja Platform
 
     // Check if we have sent an announcement before.
     // If not, send one and save the fact that we have.
@@ -48,18 +45,46 @@ function myDriver(opts,app) {
       self.save();
     }
 	
-	setInterval(orvibo.subscribe, 300000); // Every 5 minutes, subscribe again
+	orvibo.on('ready', function() { // We're ready to begin looking for sockets.
+		console.log("Driver prepared, discovering sockets .."); 
+		dTimer = setInterval(function() { // Sometimes the data won't send right away and we have to try a few times before the packet will leave
+			console.log("Trying to discover sockets ..");
+			orvibo.discover();
+		 }, 2000); // preparation is complete. Start discovering sockets!
+		 
+		 setInterval(function() { // Every minute we want to scan for new sockets
+			 console.log("Discovering new sockets..");
+			 orvibo.discover();
+		 }, 60000);
+	});
 	
-	if ( typeof opts.mac_address !== 'undefined' && opts.mac_address ) { // If we've set a MAC address previously..
-		if(opts.mac_address.length > 0) { // Check if we really have
-			orvibo.setMacAddress(opts.mac_address); // Pass it to our socket file
-			console.log("Set mac_address for orvibo class. Discovering..");
-			dTimer = setInterval(orvibo.discover, 1000); // Then discover the IP address of our socket
-		}
-	}
+	orvibo.on('socketfound', function(index) { 
+		clearInterval(dTimer);
+		console.log("Socket found! Index is " + index + ". Subscribing .."); 
+		orvibo.subscribe(); 
+	}) // We've found a socket. Subscribe to it if we haven't already!
+		
+	orvibo.on('subscribed', function(index, state) { 
+		console.log("Socket index " + index + " successfully subscribed. State is " + state + ". Querying ..");
+		orvibo.query(); 
+		self.emit('data', state);
+	}); // We've subscribed to our device. Now we need to grab its name!
+	
+	orvibo.on('messagereceived', function(message) {
+		console.log("MSG: " + message.toString('hex'));
+	});
+	
+	orvibo.on('queried', function(index, name) {
+		console.log("Socket " + index + " has a name. It's " + name);
+		
+		// Register a device
 
-    // Register a device
-    self.emit('register', new Device());
+	    self.emit('register', new Device(index, name, orvibo.hosts[index].macaddress, orvibo.getState(index)));
+
+	});
+
+	console.log("Preparing driver ..");
+	orvibo.prepare(); // Get ready to start finding sockets
   });
 };
 
@@ -82,24 +107,9 @@ myDriver.prototype.config = function(rpc,cb) {
   if (!rpc) {
     return configHandlers.menu.call(this,cb);
   }
-  else if (rpc.method == "save_mac") {
-	  macAddr = strToHex(params.mac_address);
-
-    try {
-		self._opts.mac_address = macAddr;
-	    self.save(); // Also doesn't work with this.save();		
-	} catch(ex) {
-		fs.appendFileSync("/home/pi/log.txt", ex + "\n");
-		fs.appendFileSync("/home/pi/log.txt", "this.opts was: " + this._opts.toString());
-	}
-  }
-  else if (typeof configHandlers[rpc.method] === "function") {
-    return configHandlers[rpc.method].call(this,rpc.params,cb);
-  }
-  else {
-    return cb(true);
-  }
 };
+
+
 
 // Give our device a stream interface
 util.inherits(Device,stream);
@@ -121,7 +131,7 @@ module.exports=Device;
  *
  * @fires data - Emit this when you wish to send data to the Ninja Platform
  */
-function Device() {
+function Device(index, dName, macaddress, state) {
 
   var self = this;
 
@@ -130,30 +140,13 @@ function Device() {
   // This device can be actuated
   this.writeable = true;
 
-  this.G = "orvibo"; // G is a string a represents the channel
+  this.G = "orvibo" + macaddress; // G is a string a represents the channel. 
   this.V = 0; // 0 is Ninja Blocks' device list
-  this.D = 238; // 235 is a relay device
-  this.name = "Orvibo Wi-Fi Smart Socket";
+  this.D = 238; // 2000 is a generic Ninja Blocks sandbox device
+  this.name = dName
 
-  orvibo.on("discovering", function() {
-  
-  });
-  orvibo.on("hostfound", function(host) { // If we've discovered a socket
-	  clearInterval(dTimer);
-	  orvibo.subscribe(); // Subscribe to it!	
-  });
-  
-  orvibo.on("subscribed", function(state) { // We've successfully subscribed to the scoket
-	  this.emit('data', state); // Because our subscription packet has our current state (00 = off, 01 = on) we emit that now				
-	  orvibo.query(); // Query our device				
-  }.bind(this));
-  
-  orvibo.on("statechanged", function(state) {
-	  this.emit('data', state);
-  }.bind(this));
-			  
-  orvibo.on("deviceinfo", function(name) { // We've queried our socket for a name and got something back!
-	  this.name = name;
+  process.nextTick(function() {
+    this.emit('data', state);
   }.bind(this));
 };
 
@@ -164,17 +157,19 @@ function Device() {
  * @param  {String} data The data received
  */
 Device.prototype.write = function(data) {
-
-	if(orvibo.isReady() == true) {
-		orvibo.setState(data);
-		this.emit('data', data);
-	} else {
-		orvibo.discover();
+	try {
+		if(orvibo.hosts[index].subscribed == true) {
+			orvibo.setState(index, data);
+			this.emit('data', data);
+		} else {
+			orvibo.discover();
+		}
+	} catch(ex) {
+		console.log("Error writing data: " + ex.message);		
 	}
+
+	
 };
-
-
-
 
 
 // Export it
