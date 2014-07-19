@@ -147,6 +147,9 @@ function Device(index, dName, macaddress, state) {
 
   process.nextTick(function() {
     this.emit('data', state);
+	setInterval(function() { // We need to subscribe every so often to keep control of the socket. This code calls subscribe() every 4 minutes
+		orvibo.subscribe();
+	},240000);
   }.bind(this));
   
   	orvibo.on('statechanged', function(index, state) {
