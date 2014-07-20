@@ -35,3 +35,8 @@ Thanks to:
 * Nozza87 on the Ninja Blocks forum for taking my basic code and making it run, and for doing the hard work in reverse-engineering the protocol
 * mlava for initial research on the manufacturer, plus data sheets of the socket 
 * dsrc12 for testing this driver and providing valuable feedback and feature suggestions
+
+Supporting development
+======================
+
+I was born and raised on the open source software movement. If you like what I do, consider donating code, hardware or a few bucks to cover costs. PayPal donations welcome at grayda [a@t] solidinc [dot.org], code forks and pull requests most welcome and if you have an Orvibo S20 / WIWO socket, please try this code and donate Wireshark files if you can 
