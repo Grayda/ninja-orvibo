@@ -16,7 +16,7 @@
 
 var EventEmitter = require('events').EventEmitter;
 var opts = require('./package.json').config;
-var autoToggle = false; // If set to true, toggle our relay every 2 seconds
+var autoToggle = true; // If set to true, toggle our relay every 2 seconds
 /* 
  * "app" is the application wide event emitter, that is... it's a channel the different parts of client
  * can use to communicate. Most system-wide events (like connect, disconnect, new device etc.) come through here.

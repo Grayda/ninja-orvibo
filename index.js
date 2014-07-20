@@ -62,12 +62,12 @@ function myDriver(opts,app) {
 		clearInterval(dTimer);
 		console.log("Socket found! Index is " + index + ". Subscribing .."); 
 		orvibo.subscribe(); 
+		orvibo.discover();
 	}) // We've found a socket. Subscribe to it if we haven't already!
 		
 	orvibo.on('subscribed', function(index, state) { 
 		console.log("Socket index " + index + " successfully subscribed. State is " + state + ". Querying ..");
 		orvibo.query(); 
-		self.emit('data', state);
 	}); // We've subscribed to our device. Now we need to grab its name!
 	
 	orvibo.on('messagereceived', function(message) {
@@ -78,8 +78,10 @@ function myDriver(opts,app) {
 		console.log("Socket " + index + " has a name. It's " + name);
 		
 		// Register a device
-
-	    self.emit('register', new Device(index, name, orvibo.hosts[index].macaddress, orvibo.getState(index)));
+		process.nextTick(function() {
+			console.log("Registering new socket ..");
+		    self.emit('register', new Device(index, name, orvibo.hosts[index].macaddress, orvibo.getState(index)));
+		});
 
 	});
 	
@@ -144,6 +146,7 @@ function Device(index, dName, macaddress, state) {
   this.V = 0; // 0 is Ninja Blocks' device list
   this.D = 238; // 2000 is a generic Ninja Blocks sandbox device
   this.name = dName
+  this.id = index;
 
   process.nextTick(function() {
     this.emit('data', state);
@@ -153,8 +156,8 @@ function Device(index, dName, macaddress, state) {
   }.bind(this));
   
   	orvibo.on('statechanged', function(index, state) {
-		console.log("State changed" + state);
-		self.emit('data', state);
+		// console.log("State changed for socket " + index + ". Set to: " + state);
+		self.emit('data', this.id);
 	});
 
 };
@@ -166,9 +169,10 @@ function Device(index, dName, macaddress, state) {
  * @param  {String} data The data received
  */
 Device.prototype.write = function(data) {
+	console.log("Index of this write is: " + this.id + " but was " + index);
 	try {
-		if(orvibo.hosts[index].subscribed == true) {
-			orvibo.setState(index, data);
+		if(orvibo.hosts[this.id].subscribed == true) {
+			orvibo.setState(this.id, data);
 			console.log("Data received: " + data + " ..");			
 			this.emit('data', data);
 		} else {
