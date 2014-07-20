@@ -1,7 +1,7 @@
 var util = require('util')
   , stream = require('stream')
   , configHandlers = require('./lib/config-handlers')
-  , OrviboSocket = require("./lib/socket.js");
+  , OrviboSocket = require("./lib/socket.js")
 
 // Give our driver a stream interface
 util.inherits(myDriver,stream);
@@ -51,6 +51,10 @@ function myDriver(opts,app) {
 			console.log("Trying to discover sockets ..");
 			orvibo.discover();
 		 }, 2000); // preparation is complete. Start discovering sockets!
+
+		setInterval(function() { // We need to subscribe every so often to keep control of the socket. This code calls subscribe() every 4 minutes
+			orvibo.subscribe();
+	    },240000);
 		 
 		 setInterval(function() { // Every minute we want to scan for new sockets
 			 console.log("Discovering new sockets..");
@@ -150,9 +154,7 @@ function Device(index, dName, macaddress, state) {
 
   process.nextTick(function() {
     this.emit('data', state);
-	setInterval(function() { // We need to subscribe every so often to keep control of the socket. This code calls subscribe() every 4 minutes
-		orvibo.subscribe();
-	},240000);
+	
   }.bind(this));
   
   	orvibo.on('statechanged', function(index, state) {
