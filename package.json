@@ -1,6 +1,6 @@
 {
   "name": "ninja-orvibo",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "A driver for the Orvibo range of Wi-Fi smart power sockets",
   "main": "index.js",
   "scripts": {
@@ -24,8 +24,7 @@
     "url": "https://github.com/Grayda/ninja-orvibo/issues"
   },
   "config": {
-    "hasSentAnnouncement": false,
-	"mac_address": ""
+    "hasSentAnnouncement": false
   }
 
 }

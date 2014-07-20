@@ -53,6 +53,7 @@ function myDriver(opts,app) {
 		 }, 2000); // preparation is complete. Start discovering sockets!
 
 		setInterval(function() { // We need to subscribe every so often to keep control of the socket. This code calls subscribe() every 4 minutes
+			console.log("Resubscribing to sockets ..");
 			orvibo.subscribe();
 	    },240000);
 		 
@@ -75,7 +76,7 @@ function myDriver(opts,app) {
 	}); // We've subscribed to our device. Now we need to grab its name!
 	
 	orvibo.on('messagereceived', function(message) {
-		// console.log("MSG: " + message.toString('hex'));
+		console.log("MSG: " + message.toString('hex'));
 	});
 	
 	orvibo.on('queried', function(index, name) {
