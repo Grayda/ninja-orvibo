@@ -71,17 +71,18 @@ function myDriver(opts,app) {
 	}) // We've found a socket. Subscribe to it if we haven't already!
 		
 	orvibo.on('subscribed', function(index, state) { 
+	
 		console.log("Socket index " + index + " successfully subscribed. State is " + state + ". Querying ..");
 		orvibo.query(); 
 	}); // We've subscribed to our device. Now we need to grab its name!
 	
-	orvibo.on('messagereceived', function(message) {
-		console.log("MSG: " + message.toString('hex'));
+	orvibo.on('messagereceived', function(message, host) {
+		// console.log("Message from " + host + ": " + message.toString('hex'));
 	});
 	
 	orvibo.on('queried', function(index, name) {
 		console.log("Socket " + index + " has a name. It's " + name);
-		
+		clearInterval(dTimer);	
 		// Register a device
 		process.nextTick(function() {
 			console.log("Registering new socket ..");
@@ -158,12 +159,19 @@ function Device(index, dName, macaddress, state) {
 	
   }.bind(this));
   
-  	orvibo.on('statechanged', function(index, state) {
+  	/* orvibo.on('statechanged', function(index, state) {
 		// console.log("State changed for socket " + index + ". Set to: " + state);
-		self.emit('data', this.id);
-	});
+		ti.emit('data', state);
+	}); */
+
+	setInterval(this.read.bind(this), 1000);
 
 };
+
+Device.prototype.read = function(cb) {
+	state = orvibo.getState(this.id)	
+	this.emit('data', state);
+}
 
 /**
  * Called whenever there is data from the Ninja Platform
