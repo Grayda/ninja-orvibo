@@ -17,6 +17,10 @@
 var EventEmitter = require('events').EventEmitter;
 var opts = require('./package.json').config;
 var autoToggle = false; // If set to true, toggle our relay every 2 seconds
+
+var readline = require('readline'),
+rl = readline.createInterface(process.stdin, process.stdout);
+
 /* 
  * "app" is the application wide event emitter, that is... it's a channel the different parts of client
  * can use to communicate. Most system-wide events (like connect, disconnect, new device etc.) come through here.
@@ -59,6 +63,12 @@ driver.on('register', function(device) {
 	    }, 5000);
 	  } else {
 		  console.log("The var autoToggle is set to false in test.js. If you want this test to toggle your relay every 2 seconds, please set it to true!");
+		  rl.setPrompt('Press a key to toggle ..\n');
+		  rl.prompt();
+		  rl.on('line', function(line) {
+			device.write(x=!x);
+			rl.prompt();
+		  });
 	  }
     }
 

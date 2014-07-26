@@ -15,7 +15,10 @@ var HELLO_WORLD_ANNOUNCEMENT = {
 };
 
 var orvibo = new OrviboSocket(); // The main class that controls our sockets
+var devices = [];
 var dTimer; // A timer that repeats orvibo.discovery() until something is found. 
+var stTimer; // A timer that repeats a setState command until it's changed.
+var suTimer; // A timer that repeats the subscription command until we get a subscription back
 
 /**
  * Called when our client starts up
@@ -65,13 +68,12 @@ function myDriver(opts,app) {
 	
 	orvibo.on('socketfound', function(index) { 
 		clearInterval(dTimer);
-		console.log("Socket found! Index is " + index + ". Subscribing .."); 
-		orvibo.subscribe(); 
+		console.log("Socket found! Index is " + index + ". IP address is " + orvibo.hosts[index].ipaddress + ". MAC address is: " + orvibo.hosts[index].macaddress + ". Subscribing .."); 
+		orvibo.subscribe();
 		orvibo.discover();
 	}) // We've found a socket. Subscribe to it if we haven't already!
 		
 	orvibo.on('subscribed', function(index, state) { 
-	
 		console.log("Socket index " + index + " successfully subscribed. State is " + state + ". Querying ..");
 		orvibo.query(); 
 	}); // We've subscribed to our device. Now we need to grab its name!
@@ -86,9 +88,16 @@ function myDriver(opts,app) {
 		// Register a device
 		process.nextTick(function() {
 			console.log("Registering new socket ..");
-		    self.emit('register', new Device(index, name, orvibo.hosts[index].macaddress, orvibo.getState(index)));
+
+			devices.push(new Device(index, name, orvibo.hosts[index].macaddress, orvibo.getState(index)));
+		    self.emit('register', devices[devices.length - 1]);
+
 		});
 
+	});
+	
+	orvibo.on('messagereceived', function(message) {
+		// console.log("Message length: " + message.toString('hex').length);
 	});
 	
 	console.log("Preparing driver ..");
@@ -154,24 +163,18 @@ function Device(index, dName, macaddress, state) {
   this.name = dName
   this.id = index;
 
-  process.nextTick(function() {
-    this.emit('data', state);
-	
-  }.bind(this));
+  self.emit('data', state);
   
-  	/* orvibo.on('statechanged', function(index, state) {
-		// console.log("State changed for socket " + index + ". Set to: " + state);
-		ti.emit('data', state);
-	}); */
 
-	setInterval(this.read.bind(this), 1000);
+  	orvibo.on('statechanged', function(index, state) {
+		// console.log("State changed for socket " + index + ". Set to: " + state);
+		devices[index].emit('data', state);
+	}.bind(this));
+
 
 };
 
-Device.prototype.read = function(cb) {
-	state = orvibo.getState(this.id)	
-	this.emit('data', state);
-}
+
 
 /**
  * Called whenever there is data from the Ninja Platform
@@ -180,12 +183,12 @@ Device.prototype.read = function(cb) {
  * @param  {String} data The data received
  */
 Device.prototype.write = function(data) {
-	console.log("Index of this write is: " + this.id + " but was " + index);
+	id = this.id;
+	// console.log("Index of this write is: " + this.id + " but was " + index);
 	try {
 		if(orvibo.hosts[this.id].subscribed == true) {
 			orvibo.setState(this.id, data);
-			console.log("Data received: " + data + " ..");			
-			this.emit('data', data);
+		devices[this.id].emit('data', data);
 		} else {
 			console.log("Not subscribed. Discovering ..");
 			orvibo.discover();
