@@ -75,6 +75,7 @@ function myDriver(opts,app) {
 		
 	orvibo.on('subscribed', function(index, state) { 
 		console.log("Socket index " + index + " successfully subscribed. State is " + state + ". Querying ..");
+		this.emit('data', state);
 		orvibo.query(); 
 	}); // We've subscribed to our device. Now we need to grab its name!
 	
@@ -163,8 +164,11 @@ function Device(index, dName, macaddress, state) {
   this.name = dName
   this.id = index;
 
-  self.emit('data', state);
-  
+  process.nextTick(function() {
+	 self.emit('data', state); 
+  });
+
+
 
   	orvibo.on('statechanged', function(index, state) {
 		// console.log("State changed for socket " + index + ". Set to: " + state);
