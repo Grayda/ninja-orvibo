@@ -88,7 +88,7 @@ function myDriver(opts,app) {
 		clearInterval(dTimer);	
 		// Register a device
 		process.nextTick(function() {
-			console.log("Registering new socket ..");
+			console.log("Registering new socket with name " + name);
 
 			devices.push(new Device(index, name, orvibo.hosts[index].macaddress, orvibo.getState(index)));
 		    self.emit('register', devices[devices.length - 1]);
