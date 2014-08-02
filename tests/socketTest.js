@@ -1,4 +1,4 @@
-var OrviboSocket = require("./lib/socket.js");
+var OrviboSocket = require("../lib/socket.js");
 var o = new OrviboSocket();
 var t;
 
