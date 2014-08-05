@@ -1,3 +1,24 @@
+/*
+  * Orvibo S10 Socket Emulator Module
+  * ---------------------------------
+  *
+  * This library lets you emulate an Orvibo S10 socket in node.js. Useful for testing the ninja-orvibo driver
+  *
+  * Usage
+  * ------
+  * Require the socket.js file and .push() a new socket onto the hosts variable. See emulatorTest.js for example
+  * Call .prepare() once you've created your sockets.
+  * If you are testing against the SmartPoint app, go into Settings > Smart Setup > Search Socket (you do NOT need to hit "Setup New socket" because it's already "set up"
+  * If you are testing against the ninja-orvibo driver for the Ninja Blocks, simply refresh your dashboard and watch the sockets appear. 
+  * 
+  * Emits
+  * ------
+  * ready - The port is bound and is ready to accept incoming data
+  * messagereceived (message, remote address) - Data has been received
+  * discovery (index, address) - The socket has been probed and we've responded
+  * subscription (address) - We've been queried, so we've sent back confirmation
+*/
+
 var util = require("util"); // For inheriting the EventEmitter stuff so we can use it via this.emit();
 var EventEmitter = require("events").EventEmitter; // For emitting events so other node.js libraries and code can react to what we're doing here
 var os = require("os"); // Used to check if we're running Windows, Linux or Mac (needed so we don't crash our app while binding our socket. Stupid bugs!
@@ -16,57 +37,53 @@ var twenties = "202020202020"; // this appears at the end of a few packets we se
 
 var hosts = [];
 
-/* var macAddress = "accfabcdef12"; // Some defaults
-var macReversed = "12efcdabcfac";
-var socketName = "Office";
-var state = "01"; */
 
 function OrviboEmulator() {
 	EventEmitter.call(this); // Needed so we can emit() from this module
-	console.log(localIP);
 	scktServer.on('message', function (message, remote) { // We've got a message back from the network
 		if (remote.address != localIP) { //Check message isn't from us
 			var MessageHex = new Buffer(message).toString('hex'); // Convert our message into a string of hex
-			this.emit('data', message, remote);
+			this.emit('messagereceived', message, remote.address);
 			var remoteMac = MessageHex.substr(MessageHex.indexOf('accf'), 12); // Look for the first occurance of ACCF (the start of our MAC address) and grab it, plus the next 12 bytes
 			index = hosts.map(function(e) { return e.macAddress; }).indexOf(remoteMac); // Use the arr.map() and indexOf functions to find out where in our array, our socket is
 			var type;
 				switch(MessageHex.substr(0,12)) { // Look for the first twelve bytes
 					case "686400067161":
-						console.log("Discovery request from: " + remote.address);
 						hosts.forEach(function(item) {
-
 							item.remote = remote.address;
 							item.ready = true;
-						
-							// C0192423CFAC202020202020534F4330303228CA6CD701
 							payload = "6864002a716100" + item.macAddress + twenties + item.macReversed + twenties + "534F43303032FED989D7" + item.state;
 							this.sendMessage(hex2ba(payload),remote.address);
-							console.log("Discovery response sent");
-							
+							this.emit('discovery', item.index, remote.address);							
 						}.bind(this));
+
 						break;
-					case "686400127167":
+					case "686400127167": // Discovery of a socket where the MAC address is known, but the IP isn't
 						mIndex = hosts.map(function(e) { return e.macAddress; }).indexOf(remoteMac);
-						if(mIndex > -1) {
-							hosts[index].remote = remote.address;
-							hosts[index].ready = true;
+						if(mIndex > -1) { 
+							hosts[mIndex].remote = remote.address;
+							hosts[mIndex].ready = true;
 							payload = "6864002a716100" + hosts[mIndex].macAddress + twenties + hosts[mIndex].macReversed + twenties + "534F43303032FED989D7" + hosts[mIndex].state;
 							this.sendMessage(hex2ba(payload),remote.address);						
+							this.emit('discovery', mIndex, remote.address);							
 						}
+						
 						break;
 					case "6864001e636c":
-						console.log("Subscription request from " + remote.address);
 						payload = "68640018636C" + hosts[index].macAddress + twenties + "0000000000" + hosts[index].state
 						this.sendMessage(hex2ba(payload),remote.address);
-						console.log("Subscription response sent");
+						this.emit('subscription', remote.address);			
 						break;
 					case "6864001d7274":
-						console.log("Query request from " + remote.address);
 						namepad = S(hosts[index].name).padRight(16, " ").s;
 						namepad = new Buffer(namepad);
-						ip = "C0A8010E" // REPLACE ME!
-						
+						var ip = localIP.split(".");
+						var ipHex = "";
+						ip.forEach(function(e) {
+							tmp = parseInt(e).toString(16);
+							ipHex = ipHex + S(tmp).padLeft(2, "0");
+						});
+					
 						switch(MessageHex.substr(MessageHex.length - 14, 2)) {
 							case "01":
 								console.log("Table 1");
@@ -113,32 +130,33 @@ function OrviboEmulator() {
 						
 						
 						this.sendMessage(hex2ba(payload),remote.address);
-						console.log("Query reply sent");
+						this.emit('queried', index, remote.address);
 						break;
 					case "6864001a6373": // I don't know what this is, but the SmartPoint app asks the socket for it, so here it is!
-						console.log("Data Packet 'A' received");
 						payload = "686400176373"
 							+ hosts[index].macAddress
 							+ twenties
 							+ "0000000000"; // Does state go on the end here?
 						this.sendMessage(hex2ba(payload),remote.address);
-						console.log("Data Packet 'A' responded to");						
+						this.emit('unknownA');
 						break;
 					case "686400166862":
-						console.log("Data Packet 'B' received");					
 						payload = "686400176862"
 							+ hosts[index].macAddress
 							+ twenties
 							+ "0000000000";
 						this.sendMessage(hex2ba(payload),remote.address);
-						console.log("Data Packet 'A' responded to");
+						this.emit('unknownB');						
 						break;							
 					case "686400176463":
 						console.log("Request to change state received");
+						oldState = hosts[index].state;
 						hosts[index].state = MessageHex.substr(MessageHex.length - 2,2) == "01" ? "01" : "00";
-						payload = "686400177366" + hosts[index].macAddress + "00000000" + hosts[index].state;
+						payload = "686400176463" + hosts[index].macAddress + twenties + "02000000" + oldState;
 						this.sendMessage(hex2ba(payload),remote.address);
-						console.log("Response to state change sent. New state is: " + hosts[index].state);
+						payload = "686400177366" + hosts[index].macAddress + twenties + "00000000" + hosts[index].state;
+						this.sendMessage(hex2ba(payload),remote.address);
+						this.emit('statechange', index, hosts[index].state, remote.address);
 						break;
 		
 				}
@@ -163,31 +181,24 @@ OrviboEmulator.prototype.prepare = function() {
 		scktClient.setBroadcast(true); // If we don't do this, we can't send broadcast packets to x.x.x.255, so we can never discover our sockets!
 	}
 	scktServer.bind(port, localIP); // Listen on port 10000
-
+	this.emit('ready');
 	
-}
-
-OrviboEmulator.prototype.setMACAddress = function(index, addr, addrReversed) {
-	hosts[index].macAddress = addr;
-	hosts[index].macReversed = addrReversed;	
-}
-
-OrviboEmulator.prototype.setName = function(index, sName) {
-	hosts[index].name = sName;	
 }
 
 OrviboEmulator.prototype.setState = function(index, sState) {
 	if(hosts[index].ready == true) {
 		console.log("State: " + sState);
+		oldState = hosts[index].state;
 		hosts[index].state = sState
 		console.log("State: " + sState);
-		payload = "686400177366" + hosts[index].macAddress + "00000000" + hosts[index].state;
+		payload = "686400176463" + hosts[index].macAddress + twenties + "02000000" + oldState;
 		this.sendMessage(hex2ba(payload),hosts[index].remote);
+		setTimeout(function() {
+			payload = "686400177366" + hosts[index].macAddress + twenties + "00000000" + sState;
+			this.sendMessage(hex2ba(payload),hosts[index].remote);
+		}.bind(this), 1000);
+		
 	}
-}
-
-OrviboEmulator.prototype.getMACAddress = function(index) {
-	return hosts[index].macAddress;
 }
 
 OrviboEmulator.prototype.hosts = hosts;
@@ -226,23 +237,6 @@ function hex2ba(hex) { // Takes a string of hex and turns it into a byte array: 
 	    arr.push("0x" + hex.substr(i, 2)); // Push 0x and the next two bytes onto the array
 	}
 	return arr;
-}
-
-function hex2a(hexx) { // Takes a hex string and turns it into an ASCII string
-    var hex = hexx.toString();//force conversion
-    var str = '';
-    for (var i = 0; i < hex.length; i += 2)
-        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-    return str;
-}
-
-OrviboEmulator.prototype.intToHex = function(int) {
-	return int.toString(16)
-}
-
-OrviboEmulator.prototype.strToHex = function (str) {
-	str = new Buffer(str);
-	return str.toString('hex');
 }
 
 module.exports = OrviboEmulator; // And make every OrviboSocket function available to whatever file wishes to use it. 
