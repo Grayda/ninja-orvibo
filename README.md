@@ -15,11 +15,11 @@ Refresh your dashboard page and after a few seconds, any detected sockets should
 Emulator
 ========
 
-This version of the socket comes with a basic emulator designed to allow you to test as many sockets as you like on the dashboard. To use it, open up ./tests/emulatorTest.js and add or remove lines as necessary. After that, run `node ./tests/emulatorTest.js` (preferably on another device) and refresh your dashboard. You should now see all your test sockets there and can toggle them, use them in rules etc., though you can't turn anything on or off, of course.
+This version of the socket comes with an emulator designed to allow you to test as many sockets as you like on the dashboard or in the SmartPoint app. To use it, open up ./tests/emulatorTest.js and add or remove lines from the `o.push` section as necessary. After that, run `node ./tests/emulatorTest.js` (preferably on another device) and refresh your dashboard. You should now see all your test sockets there and can toggle them, use them in rules etc., though you can't turn anything on or off, of course.
 
 After you're done playing with the emulator, you'll need to manually remove the test devices from your dashboard.
 
-NOTE: This emulator does NOT work with the SmartPoint app. The search gets most of the way, then quits during the query stage with a generic error. It's on my to-do list.
+NOTE: This emulator works with the SmartPoint app, but is still in beta. Stuff like changing the name or icon of the socket is not supported (nothing will happen). 
 
 Feedback
 ========
@@ -29,7 +29,8 @@ This is a beta driver. It has been built and tested against the smart socket by 
 To-Do:
 ======
 
-* Fix up the emulator so it'll work with SmartPoint (90% done)
+* Add comments to the emulator
+* ~~Fix up the emulator so it'll work with SmartPoint (90% done)~~
 * ~~Test this with more than one socket~~
 * ~~Actually get this to run~~
 * ~~Make it more robust so it doesn't accidentally detect the SmartPoint app as a socket (a bug in the SP app, perhaps?)~~
