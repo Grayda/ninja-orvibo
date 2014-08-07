@@ -27,6 +27,7 @@
     "hasSentAnnouncement": false
   },
   "dependencies": {
-    "string": "^1.9.0"
+    "string": "^1.9.0",
+    "underscore.string": "^2.3.3"
   }
 }

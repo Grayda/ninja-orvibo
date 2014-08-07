@@ -4,8 +4,14 @@ var o = new OrviboEmulator();
 
 
 /* To add new sockets, copy and paste this line and change as necessary */
-o.hosts.push({ index: 1, remote: '', ready: false, macAddress: "accfdeadbeef", macReversed: "efbeaddecfac", name: "Dead Beef", state: "00"  });
-o.hosts.push({ index: 0, remote: '', ready: false, macAddress: "accffadedbad", macReversed: "addbdefacfac", name: "Faded Bad", state: "01"  });
+o.hosts.push({ index: 0, remote: '', ready: false, macAddress: "accfdeadbeef", macReversed: "", name: "Dead Beef", state: "00"  });
+o.hosts.push({ index: 1, remote: '', ready: false, macAddress: "accffadedbad", macReversed: "", name: "Faded Bad", state: "01"  });
+o.hosts.push({ index: 2, remote: '', ready: false, macAddress: "accfabfabfab", macReversed: "", name: "Simply Fabulous!", state: "01"  });
+o.hosts.push({ index: 3, remote: '', ready: false, macAddress: "accfdeadfade", macReversed: "", name: "Deadly Fade", state: "01"  });
+o.hosts.push({ index: 4, remote: '', ready: false, macAddress: "accfc0feedad", macReversed: "", name: "Coffee Dad", state: "01"  });
+o.hosts.push({ index: 5, remote: '', ready: false, macAddress: "accfd00dfeed", macReversed: "", name: "Dude Feed", state: "01"  });
+o.hosts.push({ index: 6, remote: '', ready: false, macAddress: "accfea7342fa", macReversed: "", name: "Aww fuck, enough!", state: "01"  });
+
 var readline = require('readline'),
 rl = readline.createInterface(process.stdin, process.stdout);
 

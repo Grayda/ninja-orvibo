@@ -22,7 +22,7 @@
 var util = require("util"); // For inheriting the EventEmitter stuff so we can use it via this.emit();
 var EventEmitter = require("events").EventEmitter; // For emitting events so other node.js libraries and code can react to what we're doing here
 var os = require("os"); // Used to check if we're running Windows, Linux or Mac (needed so we don't crash our app while binding our socket. Stupid bugs!
-var S = require("string");
+var _s = require("underscore.string");
 
 util.inherits(OrviboEmulator, EventEmitter); // We want to get all the benefits of EventEmitter, but in our own class. this means we can use this.emit("Derp");
 
@@ -75,13 +75,13 @@ function OrviboEmulator() {
 						this.emit('subscription', remote.address);			
 						break;
 					case "6864001d7274":
-						namepad = S(hosts[index].name).padRight(16, " ").s;
+						namepad = _s.rpad(hosts[index].name, 16, " ");
 						namepad = new Buffer(namepad);
 						var ip = localIP.split(".");
 						var ipHex = "";
 						ip.forEach(function(e) {
 							tmp = parseInt(e).toString(16);
-							ipHex = ipHex + S(tmp).padLeft(2, "0");
+							ipHex = ipHex + _s.lpad(tmp, 2, "0");
 						});
 					
 						switch(MessageHex.substr(MessageHex.length - 14, 2)) {
@@ -168,6 +168,13 @@ function OrviboEmulator() {
 }
 
 OrviboEmulator.prototype.prepare = function() {
+
+	hosts.forEach(function(e) { // Calculate the reverse of the MAC address
+		e.macReversed = _s.chop(e.macAddress, 2); // Chop up our MAC address into lots of two and shove them into an array
+		e.macReversed = e.macReversed.reverse(); // Reverse the array
+		e.macReversed = e.macReversed.join(""); // Join the array so it's now a string
+		console.log("Reversed is: " + e.macReversed); // And that's our MAC address, reversed!
+	});
 
 	// Due to some funkyness between operating systems or possibly node.js versions, we need to bind our client in two different ways.
 	if(os.type() == "Windows_NT") { // Windows will only work if we setBroadcast(true) in a callback
