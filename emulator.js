@@ -52,7 +52,7 @@ function OrviboEmulator() {
 						hosts.forEach(function(item) {
 							item.remote = remote.address;
 							item.ready = true;
-							payload = "6864002a716100" + item.macAddress + twenties + item.macReversed + twenties + "534F43303032FED989D7" + item.state;
+							payload = "6864002a716100" + item.macAddress + twenties + _s.chop(item.macAddress, 2).reverse().join("") + twenties + "534F43303032FED989D7" + item.state;
 							this.sendMessage(hex2ba(payload),remote.address);
 							this.emit('discovery', item.index, remote.address);							
 						}.bind(this));
@@ -63,7 +63,7 @@ function OrviboEmulator() {
 						if(mIndex > -1) { 
 							hosts[mIndex].remote = remote.address;
 							hosts[mIndex].ready = true;
-							payload = "6864002a716100" + hosts[mIndex].macAddress + twenties + hosts[mIndex].macReversed + twenties + "534F43303032FED989D7" + hosts[mIndex].state;
+							payload = "6864002a716100" + hosts[mIndex].macAddress + twenties + _s.chop(hosts[index].macAddress, 2).reverse().join("") + twenties + "534F43303032FED989D7" + hosts[mIndex].state;
 							this.sendMessage(hex2ba(payload),remote.address);						
 							this.emit('discovery', mIndex, remote.address);							
 						}
@@ -100,7 +100,7 @@ function OrviboEmulator() {
 									+ "020000000004000100008A0001004325" // Record number and other junk we don't care about :)
 									+ hosts[index].macAddress 
 									+ twenties 
-									+ hosts[index].macReversed 
+									+ _s.chop(hosts[index].macAddress, 2).reverse().join("")
 									+ twenties 
 									+ "383838383838" // Remote password
 									+ twenties // Padding for the remote password
@@ -168,13 +168,6 @@ function OrviboEmulator() {
 }
 
 OrviboEmulator.prototype.prepare = function() {
-
-	hosts.forEach(function(e) { // Calculate the reverse of the MAC address
-		e.macReversed = _s.chop(e.macAddress, 2); // Chop up our MAC address into lots of two and shove them into an array
-		e.macReversed = e.macReversed.reverse(); // Reverse the array
-		e.macReversed = e.macReversed.join(""); // Join the array so it's now a string
-		console.log("Reversed is: " + e.macReversed); // And that's our MAC address, reversed!
-	});
 
 	// Due to some funkyness between operating systems or possibly node.js versions, we need to bind our client in two different ways.
 	if(os.type() == "Windows_NT") { // Windows will only work if we setBroadcast(true) in a callback
