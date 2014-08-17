@@ -12,6 +12,8 @@ To install this driver, SSH into your block, go to the location of your Ninja Bl
 
 Refresh your dashboard page and after a few seconds, any detected sockets should appear on the page. New sockets are auto-discovered every minute
 
+If you're after more technical details, check out http://pastebin.com/LfUhsbcS
+
 Emulator
 ========
 
