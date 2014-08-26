@@ -1,7 +1,7 @@
 PLEASE READ ME FIRST!
 =====================
 
-This driver is no longer being maintained. Please check out the [ninja-allone][1] driver which incorporates the ninja-orvibo code and now supports the Orvibo ALlOne IR blaster, plus the Orvibo S10 and S20 sockets
+This driver is no longer being maintained. Please check out the [ninja-allone][1] driver which incorporates the ninja-orvibo code and now supports the Orvibo AllOne IR blaster, plus the Orvibo S10 and S20 sockets
 
 ninja-orvibo
 ============
