@@ -1,3 +1,8 @@
+PLEASE READ ME FIRST!
+=====================
+
+This driver is no longer being maintained. Please check out the [ninja-allone][1] driver which incorporates the ninja-orvibo code and now supports the Orvibo ALlOne IR blaster, plus the Orvibo S10 and S20 sockets
+
 ninja-orvibo
 ============
 
@@ -53,3 +58,5 @@ Supporting development
 ======================
 
 I was born and raised on the open source software movement. If you like what I do, consider donating code, hardware or a few bucks to cover costs. PayPal donations welcome at grayda [a@t] solidinc [dot.org], code forks and pull requests most welcome and if you have an Orvibo S20 / WIWO socket, please try this code and donate Wireshark files if you can 
+
+  [1]: https://github.com/Grayda/ninja-allone
